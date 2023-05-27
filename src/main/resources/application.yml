@@ -1,3 +1,7 @@
 spring:
   main:
     web-application-type: none
+
+trafiklab:
+  base-url: https://api.sl.se/api2/LineData.json
+  api-key: ${TRAFIKLAB_API_KEY}
