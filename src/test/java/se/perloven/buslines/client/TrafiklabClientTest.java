@@ -3,10 +3,11 @@ package se.perloven.buslines.client;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient;
 import org.springframework.context.annotation.Import;
@@ -23,6 +24,7 @@ import se.perloven.buslines.model.Stop;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -144,6 +146,43 @@ class TrafiklabClientTest {
                     }
                 }
                 """;
+    }
+
+    @ParameterizedTest
+    @MethodSource("badResponses")
+    void emptyJourneyOnBadResponse(MockResponse badResponse) throws Exception {
+        mockWebServer.enqueue(badResponse);
+
+        Optional<Response<Journey>> journeyResponse = client.getJourneyData();
+
+        assertTrue(journeyResponse.isEmpty());
+        var recordedRequest = mockWebServer.takeRequest(2, TimeUnit.SECONDS);
+        assertNotNull(recordedRequest);
+    }
+
+    @ParameterizedTest
+    @MethodSource("badResponses")
+    void emptyStopResponseOnBadResponse(MockResponse badResponse) throws Exception {
+        mockWebServer.enqueue(badResponse);
+
+        Optional<Response<Stop>> stopResponse = client.getStopData();
+
+        assertTrue(stopResponse.isEmpty());
+        var recordedRequest = mockWebServer.takeRequest(2, TimeUnit.SECONDS);
+        assertNotNull(recordedRequest);
+    }
+
+    private static Stream<MockResponse> badResponses() {
+        return Stream.of(
+                baseResponse().setResponseCode(400),
+                baseResponse().setResponseCode(500),
+                baseResponse().setResponseCode(200),
+                baseResponse().setResponseCode(200).setBody("{\"StatusCode\": 1002}")
+        );
+    }
+
+    private static MockResponse baseResponse() {
+        return new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     }
 }
 
