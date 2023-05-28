@@ -1,6 +1,9 @@
 spring:
   main:
     web-application-type: none
+  jackson:
+    mapper:
+      accept-case-insensitive-properties: true
 
 trafiklab:
   base-url: https://api.sl.se/api2/LineData.json
