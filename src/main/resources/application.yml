@@ -4,6 +4,11 @@ spring:
   jackson:
     mapper:
       accept-case-insensitive-properties: true
+  task:
+    execution:
+      pool:
+        core-size: 2
+        keep-alive: 1s
 
 trafiklab:
   base-url: https://api.sl.se/api2/LineData.json
