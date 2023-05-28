@@ -90,7 +90,9 @@ public class BuslinesService {
 
     private void printTop10(List<LineSummary> top10Lines) {
         System.out.println("===== Top 10 bus lines (by stop count) =====");
-        top10Lines.forEach(line -> System.out.printf("- Line %d with %d stops%n", line.lineNumber, line.totalStops()));
+        top10Lines.forEach(line ->
+                System.out.println("- Line %d with %d stops".formatted(line.lineNumber, line.totalStops()))
+        );
     }
 
     private void printTop1(LineSummary line) {
@@ -98,7 +100,7 @@ public class BuslinesService {
                 .map(Stop::stopPointName)
                 .collect(Collectors.joining(", "));
         System.out.println();
-        System.out.printf("Line %d is in the lead with %d bus stops.%n", line.lineNumber, line.totalStops());
+        System.out.println("Line %d is in the lead with %d stops.".formatted(line.lineNumber, line.totalStops()));
         System.out.println("Here are their names: " + stopNames);
     }
 
