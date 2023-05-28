@@ -1,9 +1,6 @@
 spring:
   main:
     web-application-type: none
-  jackson:
-    mapper:
-      accept-case-insensitive-properties: true
   task:
     execution:
       pool:
