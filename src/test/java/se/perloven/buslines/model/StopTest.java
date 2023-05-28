@@ -27,4 +27,18 @@ class StopTest {
     void createOk() {
         assertDoesNotThrow(() -> new Stop(someInt(), someString(), someString()));
     }
+
+    @Test
+    void isBusStop() {
+        var busStop = new Stop(someInt(), someString(), "BUSTERM");
+
+        assertTrue(busStop.isBusStop());
+    }
+
+    @Test
+    void isNotBusStop() {
+        var trainStop = new Stop(someInt(), someString(), "RAILWSTN");
+
+        assertFalse(trainStop.isBusStop());
+    }
 }

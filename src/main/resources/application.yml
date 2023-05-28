@@ -8,3 +8,8 @@ spring:
 trafiklab:
   base-url: https://api.sl.se/api2/LineData.json
   api-key: ${TRAFIKLAB_API_KEY}
+
+logging:
+  level:
+    root: info
+    se.perloven: debug

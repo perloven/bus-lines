@@ -8,4 +8,8 @@ public record Stop(Integer stopPointNumber, String stopPointName, String stopAre
         Assert.hasLength(stopPointName, "Stop point name must not be empty");
         Assert.hasLength(stopAreaTypeCode, "Stop area type code must not be empty");
     }
+
+    public boolean isBusStop() {
+        return stopAreaTypeCode.equals("BUSTERM");
+    }
 }
