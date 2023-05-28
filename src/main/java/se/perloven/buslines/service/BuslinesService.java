@@ -4,13 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 import se.perloven.buslines.client.TrafiklabClient;
 import se.perloven.buslines.model.Journey;
-import se.perloven.buslines.model.Response;
 import se.perloven.buslines.model.Stop;
 
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,9 +19,11 @@ import java.util.stream.Collectors;
 public class BuslinesService {
     private final static Logger log = LoggerFactory.getLogger(BuslinesService.class);
     private final TrafiklabClient client;
+    private final AsyncTaskExecutor executor;
 
-    public BuslinesService(TrafiklabClient client) {
+    public BuslinesService(TrafiklabClient client, AsyncTaskExecutor executor) {
         this.client = client;
+        this.executor = executor;
     }
 
     private record LineSummary(int lineNumber, List<Stop> stops) {
@@ -31,11 +34,13 @@ public class BuslinesService {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void processBusLines() {
-        List<Journey> journeys = getJourneys();
-        log.debug("Retrieved {} journey stops", journeys.size());
+    public void processBusLines() throws Exception {
+        Future<List<Journey>> journeysFuture = getJourneysAsync();
+        Future<List<Stop>> stopsFuture = getStopsAsync();
 
-        List<Stop> stops = getStops();
+        List<Journey> journeys = journeysFuture.get();
+        log.debug("Retrieved {} journey stops", journeys.size());
+        List<Stop> stops = stopsFuture.get();
         log.debug("Retrieved {} stops", stops.size());
 
         List<LineSummary> top10 = calculateTop10(journeys, stops);
@@ -47,22 +52,18 @@ public class BuslinesService {
         printTop1(top10.get(0));
     }
 
-    private List<Journey> getJourneys() {
-        Optional<Response<Journey>> journeyData = client.getJourneyData();
-        if (journeyData.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return journeyData.get().responseData().result();
+    private Future<List<Journey>> getJourneysAsync() {
+        return executor.submit(() -> client.getJourneyData()
+                .map(response -> response.responseData().result())
+                .orElse(Collections.emptyList())
+        );
     }
 
-    private List<Stop> getStops() {
-        Optional<Response<Stop>> stopData = client.getStopData();
-        if (stopData.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return stopData.get().responseData().result();
+    private Future<List<Stop>> getStopsAsync() {
+        return executor.submit(() -> client.getStopData()
+                .map(response -> response.responseData().result())
+                .orElse(Collections.emptyList())
+        );
     }
 
     private List<LineSummary> calculateTop10(List<Journey> allJourneys, List<Stop> allStops) {
