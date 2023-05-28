@@ -28,14 +28,6 @@ public class BuslinesService {
         public int totalStops() {
             return stops.size();
         }
-
-        @Override
-        public String toString() {
-            String stopInfo = stops.stream()
-                    .map(stop -> "%s (%d)".formatted(stop.stopPointName(), stop.stopPointNumber()))
-                    .collect(Collectors.joining(", ", "[", "]"));
-            return "Line %d with %d stops: %s".formatted(lineNumber, totalStops(), stopInfo);
-        }
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -47,8 +39,12 @@ public class BuslinesService {
         log.debug("Retrieved {} stops", stops.size());
 
         List<LineSummary> top10 = calculateTop10(journeys, stops);
-        System.out.println("===== Top 10 bus lines (by stop count) =====");
-        top10.forEach(System.out::println);
+        if (top10.isEmpty()) {
+            return;
+        }
+
+        printTop10(top10);
+        printTop1(top10.get(0));
     }
 
     private List<Journey> getJourneys() {
@@ -89,6 +85,20 @@ public class BuslinesService {
                 .sorted(Comparator.comparing(LineSummary::totalStops).reversed())
                 .limit(10)
                 .toList();
+    }
+
+    private void printTop10(List<LineSummary> top10Lines) {
+        System.out.println("===== Top 10 bus lines (by stop count) =====");
+        top10Lines.forEach(line -> System.out.printf("- Line %d with %d stops%n", line.lineNumber, line.totalStops()));
+    }
+
+    private void printTop1(LineSummary line) {
+        String stopNames = line.stops.stream()
+                .map(Stop::stopPointName)
+                .collect(Collectors.joining(", "));
+        System.out.println();
+        System.out.printf("Line %d is in the lead with %d bus stops.%n", line.lineNumber, line.totalStops());
+        System.out.println("Here are their names: " + stopNames);
     }
 
 }
