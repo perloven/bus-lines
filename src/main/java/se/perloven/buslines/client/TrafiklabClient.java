@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import se.perloven.buslines.model.Journey;
 import se.perloven.buslines.model.Response;
+import se.perloven.buslines.model.Stop;
 
 import java.util.Optional;
 
@@ -38,7 +39,34 @@ public class TrafiklabClient {
                     .bodyToMono(new ParameterizedTypeReference<Response<Journey>>() {})
                     .block();
         } catch (WebClientException e) {
-            log.error("Trafiklab client error", e);
+            log.error("Trafiklab client error (jour)", e);
+            return Optional.empty();
+        }
+
+        if (response == null) {
+            return Optional.empty();
+        } else if (response.statusCode() != OK_RESPONSE_CODE) {
+            log.warn("Retrieved error status code: {}", response.statusCode());
+            return Optional.empty();
+        } else {
+            return Optional.of(response);
+        }
+    }
+
+    public Optional<Response<Stop>> getStopData() {
+        final Response<Stop> response;
+        try {
+            response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("model", "stop")
+                            .queryParam("key", this.apiKey)
+                            .build()
+                    )
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Response<Stop>>() {})
+                    .block();
+        } catch (WebClientException e) {
+            log.error("Trafiklab client error (stop)", e);
             return Optional.empty();
         }
 
