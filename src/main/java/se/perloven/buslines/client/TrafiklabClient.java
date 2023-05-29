@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientException;
 import se.perloven.buslines.model.Journey;
 import se.perloven.buslines.model.Response;
+import se.perloven.buslines.model.ResponseDataType;
 import se.perloven.buslines.model.Stop;
 
 import java.util.Optional;
@@ -27,53 +28,33 @@ public class TrafiklabClient {
     }
 
     public Optional<Response<Journey>> getJourneyData() {
-        final Response<Journey> response;
-        try {
-            response = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .queryParam("model", "jour")
-                            .queryParam("key", this.apiKey)
-                            .build()
-                    )
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Response<Journey>>() {})
-                    .block();
-        } catch (WebClientException e) {
-            log.error("Trafiklab client error (jour)", e);
-            return Optional.empty();
-        }
-
-        if (response == null) {
-            return Optional.empty();
-        } else if (response.statusCode() != OK_RESPONSE_CODE) {
-            log.warn("Retrieved error status code: {}", response.statusCode());
-            return Optional.empty();
-        } else {
-            return Optional.of(response);
-        }
+        return fetchData("jour", new ParameterizedTypeReference<>() {});
     }
 
     public Optional<Response<Stop>> getStopData() {
-        final Response<Stop> response;
+        return fetchData("stop", new ParameterizedTypeReference<>() {});
+    }
+
+    private <T extends ResponseDataType> Optional<Response<T>> fetchData(String model,
+                                                                         ParameterizedTypeReference<Response<T>> type) {
+        final Response<T> response;
         try {
             response = webClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .queryParam("model", "stop")
+                            .queryParam("model", model)
                             .queryParam("key", this.apiKey)
                             .build()
                     )
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Response<Stop>>() {})
+                    .bodyToMono(type)
                     .block();
         } catch (WebClientException e) {
-            log.error("Trafiklab client error (stop)", e);
+            log.error("Trafiklab client error ()", e);
             return Optional.empty();
         }
 
-        if (response == null) {
-            return Optional.empty();
-        } else if (response.statusCode() != OK_RESPONSE_CODE) {
-            log.warn("Retrieved error status code: {}", response.statusCode());
+        if (response == null || response.statusCode() != OK_RESPONSE_CODE) {
+            log.warn("Retrieved bad response from Trafiklab: {}", response);
             return Optional.empty();
         } else {
             return Optional.of(response);

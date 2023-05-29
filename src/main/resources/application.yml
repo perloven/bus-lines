@@ -14,4 +14,4 @@ trafiklab:
 logging:
   level:
     root: info
-    se.perloven: debug
+    se.perloven: info
