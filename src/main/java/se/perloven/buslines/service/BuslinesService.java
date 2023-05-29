@@ -1,7 +1,5 @@
 package se.perloven.buslines.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 import se.perloven.buslines.client.TrafiklabClient;
@@ -15,7 +13,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class BuslinesService {
-    private final static Logger log = LoggerFactory.getLogger(BuslinesService.class);
     private final TrafiklabClient client;
     private final AsyncTaskExecutor executor;
 
@@ -24,14 +21,18 @@ public class BuslinesService {
         this.executor = executor;
     }
 
-    public List<LineSummary> getTop10BusLines() throws Exception {
+    public List<LineSummary> getTop10BusLines() {
         Future<List<Journey>> journeysFuture = getJourneysAsync();
         Future<List<Stop>> stopsFuture = getStopsAsync();
 
-        List<Journey> journeys = journeysFuture.get();
-        log.debug("Retrieved {} journey stops", journeys.size());
-        List<Stop> stops = stopsFuture.get();
-        log.debug("Retrieved {} stops", stops.size());
+        final List<Journey> journeys;
+        final List<Stop> stops;
+        try {
+            journeys = journeysFuture.get();
+            stops = stopsFuture.get();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
 
         return calculateTop10(journeys, stops);
     }
