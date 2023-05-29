@@ -2,8 +2,6 @@ package se.perloven.buslines.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 import se.perloven.buslines.client.TrafiklabClient;
@@ -26,15 +24,7 @@ public class BuslinesService {
         this.executor = executor;
     }
 
-    private record LineSummary(int lineNumber, List<Stop> stops) {
-
-        public int totalStops() {
-            return stops.size();
-        }
-    }
-
-    @EventListener(ApplicationReadyEvent.class)
-    public void processBusLines() throws Exception {
+    public List<LineSummary> getTop10BusLines() throws Exception {
         Future<List<Journey>> journeysFuture = getJourneysAsync();
         Future<List<Stop>> stopsFuture = getStopsAsync();
 
@@ -43,13 +33,7 @@ public class BuslinesService {
         List<Stop> stops = stopsFuture.get();
         log.debug("Retrieved {} stops", stops.size());
 
-        List<LineSummary> top10 = calculateTop10(journeys, stops);
-        if (top10.isEmpty()) {
-            return;
-        }
-
-        printTop10(top10);
-        printTop1(top10.get(0));
+        return calculateTop10(journeys, stops);
     }
 
     private Future<List<Journey>> getJourneysAsync() {
@@ -86,22 +70,6 @@ public class BuslinesService {
                 .sorted(Comparator.comparing(LineSummary::totalStops).reversed())
                 .limit(10)
                 .toList();
-    }
-
-    private void printTop10(List<LineSummary> top10Lines) {
-        System.out.println("===== Top 10 bus lines (by stop count) =====");
-        top10Lines.forEach(line ->
-                System.out.println("- Line %d with %d stops".formatted(line.lineNumber, line.totalStops()))
-        );
-    }
-
-    private void printTop1(LineSummary line) {
-        String stopNames = line.stops.stream()
-                .map(Stop::stopPointName)
-                .collect(Collectors.joining(", "));
-        System.out.println();
-        System.out.println("Line %d is in the lead with %d stops.".formatted(line.lineNumber, line.totalStops()));
-        System.out.println("Here are their names: " + stopNames);
     }
 
 }
