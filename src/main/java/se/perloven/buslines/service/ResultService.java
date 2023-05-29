@@ -40,6 +40,6 @@ public class ResultService {
                 .collect(Collectors.joining(", "));
         System.out.println();
         System.out.println("Line %d is in the lead with %d stops.".formatted(line.lineNumber(), line.totalStops()));
-        System.out.println("Here are their names: " + stopNames);
+        System.out.println("Here are their names:" + System.lineSeparator() + stopNames);
     }
 }

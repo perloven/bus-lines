@@ -9,6 +9,6 @@ Utilizes Trafiklab's API, specifically _SL Stops and lines v2.0_. More info at: 
 Run unit tests: `./mvnw test`
 
 ## Application
-How to run the application: 
-1. Build jar file: `./mvnw clean package`
-2. Run jar file: `java -jar target\bus-lines-0.0.1-SNAPSHOT-jar`
+How to run the application:  
+`./mvnw spring-boot:run -Dspring-boot.run.arguments="--TRAFIKLAB_API_KEY=<your API key>"`  
+(Mac/Linux: `./mvnw`, Windows: `mvnw`)
